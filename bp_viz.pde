@@ -4,6 +4,9 @@ Table stopsTable;
 ArrayList<Stop> stops = new ArrayList<Stop>();
 ArrayList<Stop> sorted = new ArrayList<Stop>();
 
+Table shapesTable;
+ArrayList<Shape> shapes = new ArrayList<Shape>();
+
 float minLat = 999;
 float maxLat = -1;
 
@@ -17,6 +20,30 @@ void setup() {
   background(255);
 
   stopsTable = loadTable("stops.txt", "header, csv");
+  shapesTable = loadTable("shapes.txt", "header, csv");
+  
+  String firstId = shapesTable.getRow(0).getString("shape_id");
+  Shape current = new Shape(firstId); 
+  for (TableRow raw : shapesTable.rows()) {
+    String id = raw.getString("shape_id");
+    if (!id.equals(current.id)) {
+      shapes.add(current);
+      current = new Shape(id);
+    }
+    current.addPoint(raw);
+  }
+  
+  for (TableRow raw : stopsTable.rows()) {
+    Stop s = new Stop(raw);
+    
+    if (s.lat < minLat) minLat = s.lat;
+    if (s.lat > maxLat) maxLat = s.lat;
+    
+    if (s.lng < minLng) minLng = s.lng;
+    if (s.lng > maxLng) maxLng = s.lng; 
+    
+    stops.add(s);
+  }
   
   for (TableRow raw : stopsTable.rows()) {
     Stop s = new Stop(raw);
@@ -49,9 +76,14 @@ void setup() {
 int i = 1;
 void draw() {
   translate(width / 2, height / 2);
+  
+  drawShapes();
+}
+
+void drawSortedStopLines() {
   stroke(0);
   strokeWeight(1);
-
+  
   Stop current = sorted.get(sorted.size() - 1);
   
   Stop next = current;
@@ -82,6 +114,24 @@ void draw() {
   i++;
   
   if (i > stops.size() - 1) {
+    noLoop();
+    endRecord();
+    println("DONE");
+  }
+}
+
+void drawShapes() {
+  stroke(0, 5);
+  strokeJoin(MITER);
+  strokeCap(PROJECT);
+  strokeWeight(1);
+  
+  Shape current = shapes.get(i);
+  current.draw();
+  
+  i++;
+  
+  if (i > shapes.size() - 1) {
     noLoop();
     endRecord();
     println("DONE");
