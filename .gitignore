@@ -1,3 +1,6 @@
 *.pdf
+*.png
 /data/
+/export/
+/sorted/
 .DS_Store

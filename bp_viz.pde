@@ -40,43 +40,48 @@ int i = 1;
 void draw() {
   translate(width / 2, height / 2);
   
-  drawTrips();
+  drawSortedStopLines(20);
 }
 
-void drawSortedStopLines() {
+void drawSortedStopLines(int perFrame) {
   stroke(0);
   strokeWeight(1);
   
-  int currentIndex = sortedStops.size() - 1;
-  Stop current = sortedStops.get(currentIndex);
-  
-  Stop next = current;
-  double recordDist = 999;
-  
-  for (String sId : stops.keySet()) {
-    Stop s = stops.get(sId);
-    if (!sortedStops.contains(s)) {
-      double d = Math.pow(s.lat - current.lat, 2) + Math.pow(s.lng - current.lng, 2);
-      if (d < recordDist) {
-         recordDist = d;
-         next = s;
+  for (int n = 0; n < perFrame; n++) {
+    int currentIndex = sortedStops.size() - 1;
+    Stop current = sortedStops.get(currentIndex);
+    
+    Stop next = current;
+    double recordDist = 999;
+    
+    for (String sId : stops.keySet()) {
+      Stop s = stops.get(sId);
+      if (!sortedStops.contains(s)) {
+        double d = Math.pow(s.lat - current.lat, 2) + Math.pow(s.lng - current.lng, 2);
+        if (d < recordDist) {
+           recordDist = d;
+           next = s;
+        }
       }
     }
+    
+    sortedStops.add(next);
+    
+    if (recordDist < 0.001) {
+      float x1 = map(next.lng, minLng, maxLng, -w/2, w/2);
+      float x2 = map(current.lng, minLng, maxLng, -w/2, w/2);
+      
+      float y1 = map(next.lat, minLat, maxLat, h/2, -h/2);
+      float y2 = map(current.lat, minLat, maxLat, h/2, -h/2);
+      
+      line(x1, y1, x2, y2);
+    }
+   
+    i++;
   }
   
-  sortedStops.add(next);
-  
-  if (recordDist < 0.001) {
-    float x1 = map(next.lng, minLng, maxLng, -w/2, w/2);
-    float x2 = map(current.lng, minLng, maxLng, -w/2, w/2);
-    
-    float y1 = map(next.lat, minLat, maxLat, h/2, -h/2);
-    float y2 = map(current.lat, minLat, maxLat, h/2, -h/2);
-    
-    line(x1, y1, x2, y2);
-  }
- 
-  i++;
+  // save frames to create GIFs
+  // save("export/frame_" + i + ".png");
   
   if (i > stops.size() - 1) {
     noLoop();
@@ -103,11 +108,11 @@ void drawShapes() {
   }
 }
 
-void drawTrips() {
+void drawTrips(int perFrame) {
   strokeJoin(MITER);
   strokeCap(PROJECT);
   
-  for (int n = 0; n < 3; n++) {
+  for (int n = 0; n < perFrame; n++) {
     Trip t = sortedTrips.get(i-1);
     Route r = routes.get(t.routeId);
     Shape s = shapes.get(t.shapeId);
