@@ -40,7 +40,7 @@ int i = 1;
 void draw() {
   translate(width / 2, height / 2);
   
-  drawSortedStopLines(20);
+  drawShapes();
 }
 
 void drawSortedStopLines(int perFrame) {
@@ -96,8 +96,14 @@ void drawShapes() {
   strokeCap(PROJECT);
   strokeWeight(1);
   
-  Shape current = (Shape)shapes.values().toArray()[i];
-  current.draw();
+  //Shape current = (Shape)shapes.values().toArray()[i];
+  //current.draw();
+  
+  for (Shape s : shapes.values()) {
+    s.drawAnim(i);
+  }
+  
+  save("export/frame_" + i + ".png");
   
   i++;
   
