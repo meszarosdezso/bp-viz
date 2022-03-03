@@ -22,7 +22,7 @@ float maxLng = -1;
 float w, h;
 
 void setup() {
-  size(800, 800);
+  size(1080, 1080);
   background(255);
 
   loadData();
@@ -39,9 +39,43 @@ void setup() {
 int i = 1;
 void draw() {
   translate(width / 2, height / 2);
-  
-  drawShapes();
+
+  drawStops();
 }
+
+void drawStops() {
+  noStroke();
+  fill(0);
+  for (Stop s : stops.values()) {
+     s.draw(); 
+  }
+  noLoop();
+  endRecord();
+}
+
+void drawAbstractStopLines() {
+  
+  stroke(0, 10);
+  noFill();
+  Stop prev = (Stop)stops.values().toArray()[0];
+  for (int s = 1; s < stops.size(); s++) {
+     Stop current = (Stop)stops.values().toArray()[s];
+     
+     float x1 = map(prev.lng, minLng, maxLng, -w/2, w/2);
+     float x2 = map(current.lng, minLng, maxLng, -w/2, w/2);
+      
+     float y1 = map(prev.lat, minLat, maxLat, h/2, -h/2);
+     float y2 = map(current.lat, minLat, maxLat, h/2, -h/2);
+     
+     line(x1, y1, x2, y2);
+     
+     prev = current;
+  }
+  
+  noLoop();
+  endRecord();
+}    
+
 
 void drawSortedStopLines(int perFrame) {
   stroke(0);
@@ -92,8 +126,8 @@ void drawSortedStopLines(int perFrame) {
 
 void drawShapes() {
   stroke(0, 5);
-  strokeJoin(MITER);
-  strokeCap(PROJECT);
+  strokeJoin(ROUND);
+  strokeCap(SQUARE);
   strokeWeight(1);
   
   //Shape current = (Shape)shapes.values().toArray()[i];
