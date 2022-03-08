@@ -16,27 +16,43 @@ void sortTripsByRouteType() {
 
 void sortStops(Stop start) {
   println("Sorting stops...");
-  sortedStops.add(start);
-  while(sortedStops.size() < stops.size()) {
-    int currentIndex = sortedStops.size() - 1;
-    Stop current = sortedStops.get(currentIndex);
-      
-    Stop next = current;
-    double recordDist = 999;
-      
-    for (String sId : stops.keySet()) {
-      Stop s = stops.get(sId);
-      if (!sortedStops.contains(s)) {
-        double d = Math.pow(s.lat - current.lat, 2) + Math.pow(s.lng - current.lng, 2);
-        if (d < recordDist) {
-           recordDist = d;
-           next = s;
+  
+  try {
+    String[] sortedIds = loadStrings("sorted_ids.txt");
+    for (String id : sortedIds) {
+      sortedStops.add(stops.get(id));
+    }
+  } catch (Exception _) {
+    sortedStops.add(start); 
+    while(sortedStops.size() < stops.size()) {
+      int currentIndex = sortedStops.size() - 1;
+      Stop current = sortedStops.get(currentIndex);
+        
+      Stop next = current;
+      double recordDist = 999;
+        
+      for (String sId : stops.keySet()) {
+        Stop s = stops.get(sId);
+        if (!sortedStops.contains(s)) {
+          double d = Math.pow(s.lat - current.lat, 2) + Math.pow(s.lng - current.lng, 2);
+          if (d < recordDist) {
+             recordDist = d;
+             next = s;
+          }
         }
       }
+        
+      sortedStops.add(next);
     }
-      
-    sortedStops.add(next);
+    
+    // save sorted ids for better performance
+    String[] sortedIds = new String[sortedStops.size()];
+    for (int s = 0; s < sortedStops.size(); s++) {
+      sortedIds[s] = sortedStops.get(s).id; 
+    }
+    saveStrings("data/sorted_ids.txt", sortedIds);
   }
+  
   println("Sorted stops.");
 }
 

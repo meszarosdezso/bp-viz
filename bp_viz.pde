@@ -73,7 +73,6 @@ void loadData() {
   }
   println("Loaded " + routes.size() + " routes.");
   
-  
   // calc vizualization width and height
   float earthW = maxLng - minLng;
   float earthH = maxLat - minLat;
@@ -85,16 +84,16 @@ void loadData() {
   
   sortTripsByRouteType();
   
-  // int startIndex = floor(random(stops.size()));
-  // Stop start = (Stop) stops.values().toArray()[startIndex];
-  // sortStops(start);
+  int startIndex = floor(random(stops.size()));
+  Stop start = (Stop) stops.values().toArray()[startIndex];
+  sortStops(start);
 }
 
 void setup() {
   size(800, 800);
   background(255);
   loadData();
-  beginRecord(PDF, "bp.pdf");
+  //beginRecord(PDF, "bp.pdf");
 }
 
 
@@ -102,14 +101,22 @@ int i = 1;
 void draw() {
   translate(width / 2, height / 2);
 
-  drawTriangles();
+  drawAbstractStopLines();
 }
 
 void drawStops() {
-  noStroke();
-  fill(0);
+  background(255);
   for (Stop s : stops.values()) {
-    s.draw(); 
+    noStroke();
+    fill(0, 50);
+    s.draw();
+    //if (random(1) < 0.05) {
+    //  Stop other = (Stop)stops.values().toArray()[floor(random(stops.size()))];
+    //  PVector p1 = coordsToPixels(other.lng, other.lat);
+    //  PVector p2 = coordsToPixels(s.lng, s.lat);
+    //  stroke(0, 50);
+    //  line(p1.x, p1.y, p2.x, p2.y);
+    //}
   }
   noLoop();
   endRecord();
@@ -118,23 +125,23 @@ void drawStops() {
 void drawTriangles() {
   // noStroke();
   // fill(0, 4);
-  stroke(0,10);
+  int step = 20;
+  stroke(0, 50);
   noFill();
-  beginShape(TRIANGLE_STRIP);
-  for (int n = 0; n < 3; n++) {
-    Stop s = (Stop)stops.values().toArray()[i + n];
+  beginShape(TRIANGLE_FAN);
+  for (int n = 0; n < step; n++) {
+    Stop s = sortedStops.get(i+n); 
     PVector p = coordsToPixels(s.lng, s.lat);
     vertex(p.x, p.y);
   }
   endShape();
   
-  i += 3;
+  i += step / 2;
   
-  if (i > stops.size() - 3) {
+  if (i > stops.size() - step) {
     noLoop();
     endRecord();
   }
-  
 }
 
 void drawCenteredStops(Stop center) {
@@ -155,6 +162,7 @@ void drawCenteredStops(Stop center) {
     endRecord();
   }
 }
+
 
 void drawAbstractStopLines() {
   stroke(0, 10);
@@ -177,12 +185,22 @@ void drawAbstractStopLines() {
 
 
 void drawSortedStopLines() {
+  noFill();
   stroke(0);
   strokeWeight(1);
   
+  Stop prev = sortedStops.get(i-1);
+  Stop current = sortedStops.get(i);
+  
+  PVector start = coordsToPixels(prev.lng, prev.lat);
+  PVector end = coordsToPixels(current.lng, current.lat);
+  
+  line(start.x, start.y, end.x, end.y);
   
   // save frames to create GIFs
   // save("export/frame_" + i + ".png");
+  
+  i++;
   
   if (i > stops.size() - 1) {
     noLoop();
