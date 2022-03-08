@@ -19,10 +19,9 @@ class Stop {
    }
    
    void draw() {
-      float x = map(this.lng, minLng, maxLng, -w/2, w/2);
-      float y = map(this.lat, minLat, maxLat, h/2, -h/2);
+      PVector p = coordsToPixels(this.lng, this.lat);
       float r = 2;
       
-      ellipse(x, y, r, r);
+      ellipse(p.x, p.y, r, r);
    }
 }

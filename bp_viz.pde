@@ -21,161 +21,6 @@ float maxLng = -1;
 
 float w, h;
 
-void setup() {
-  size(1080, 1080);
-  background(255);
-
-  loadData();
-  
-  int startIndex = floor(random(stops.size()));
-  String startId = (String) stops.keySet().toArray()[startIndex];
-  Stop start = stops.get(startId);
-  sortedStops.add(start);
-   
-  beginRecord(PDF, "bp.pdf");
-}
-
-
-int i = 1;
-void draw() {
-  translate(width / 2, height / 2);
-
-  drawStops();
-}
-
-void drawStops() {
-  noStroke();
-  fill(0);
-  for (Stop s : stops.values()) {
-     s.draw(); 
-  }
-  noLoop();
-  endRecord();
-}
-
-void drawAbstractStopLines() {
-  
-  stroke(0, 10);
-  noFill();
-  Stop prev = (Stop)stops.values().toArray()[0];
-  for (int s = 1; s < stops.size(); s++) {
-     Stop current = (Stop)stops.values().toArray()[s];
-     
-     float x1 = map(prev.lng, minLng, maxLng, -w/2, w/2);
-     float x2 = map(current.lng, minLng, maxLng, -w/2, w/2);
-      
-     float y1 = map(prev.lat, minLat, maxLat, h/2, -h/2);
-     float y2 = map(current.lat, minLat, maxLat, h/2, -h/2);
-     
-     line(x1, y1, x2, y2);
-     
-     prev = current;
-  }
-  
-  noLoop();
-  endRecord();
-}    
-
-
-void drawSortedStopLines(int perFrame) {
-  stroke(0);
-  strokeWeight(1);
-  
-  for (int n = 0; n < perFrame; n++) {
-    int currentIndex = sortedStops.size() - 1;
-    Stop current = sortedStops.get(currentIndex);
-    
-    Stop next = current;
-    double recordDist = 999;
-    
-    for (String sId : stops.keySet()) {
-      Stop s = stops.get(sId);
-      if (!sortedStops.contains(s)) {
-        double d = Math.pow(s.lat - current.lat, 2) + Math.pow(s.lng - current.lng, 2);
-        if (d < recordDist) {
-           recordDist = d;
-           next = s;
-        }
-      }
-    }
-    
-    sortedStops.add(next);
-    
-    if (recordDist < 0.001) {
-      float x1 = map(next.lng, minLng, maxLng, -w/2, w/2);
-      float x2 = map(current.lng, minLng, maxLng, -w/2, w/2);
-      
-      float y1 = map(next.lat, minLat, maxLat, h/2, -h/2);
-      float y2 = map(current.lat, minLat, maxLat, h/2, -h/2);
-      
-      line(x1, y1, x2, y2);
-    }
-   
-    i++;
-  }
-  
-  // save frames to create GIFs
-  // save("export/frame_" + i + ".png");
-  
-  if (i > stops.size() - 1) {
-    noLoop();
-    endRecord();
-    println("DONE");
-  }
-}
-
-void drawShapes() {
-  stroke(0, 5);
-  strokeJoin(ROUND);
-  strokeCap(SQUARE);
-  strokeWeight(1);
-  
-  //Shape current = (Shape)shapes.values().toArray()[i];
-  //current.draw();
-  
-  for (Shape s : shapes.values()) {
-    s.drawAnim(i);
-  }
-  
-  save("export/frame_" + i + ".png");
-  
-  i++;
-  
-  if (i > shapes.size() - 1) {
-    noLoop();
-    endRecord();
-    println("DONE");
-  }
-}
-
-void drawTrips(int perFrame) {
-  strokeJoin(MITER);
-  strokeCap(PROJECT);
-  
-  for (int n = 0; n < perFrame; n++) {
-    Trip t = sortedTrips.get(i-1);
-    Route r = routes.get(t.routeId);
-    Shape s = shapes.get(t.shapeId);
-    stroke(r.colour);
-    strokeWeight(1);
-    
-    if (r.type.equals("1")) {
-      strokeWeight(3); 
-    }
-     
-    if (s != null) {
-      s.draw();  
-    }
-    
-    i++;
-  }
-  
-  if (i > sortedTrips.size() - 1) {
-    noLoop();
-    endRecord();
-    println("DONE");  
-  }
-}
 
 void loadData() {
   stopsTable = loadTable("stops.txt", "header, csv");
@@ -239,20 +84,162 @@ void loadData() {
   h = earthH * scale - 50;
   
   sortTripsByRouteType();
+  
+  // int startIndex = floor(random(stops.size()));
+  // Stop start = (Stop) stops.values().toArray()[startIndex];
+  // sortStops(start);
 }
 
-void sortTripsByRouteType() {
-  String[] sort = new String[]{"3", "0", "800", "1", "109", "4"};
+void setup() {
+  size(800, 800);
+  background(255);
+  loadData();
+  beginRecord(PDF, "bp.pdf");
+}
+
+
+int i = 1;
+void draw() {
+  translate(width / 2, height / 2);
+
+  drawTriangles();
+}
+
+void drawStops() {
+  noStroke();
+  fill(0);
+  for (Stop s : stops.values()) {
+    s.draw(); 
+  }
+  noLoop();
+  endRecord();
+}
+
+void drawTriangles() {
+  // noStroke();
+  // fill(0, 4);
+  stroke(0,10);
+  noFill();
+  beginShape(TRIANGLE_STRIP);
+  for (int n = 0; n < 3; n++) {
+    Stop s = (Stop)stops.values().toArray()[i + n];
+    PVector p = coordsToPixels(s.lng, s.lat);
+    vertex(p.x, p.y);
+  }
+  endShape();
   
-  for (String type : sort) {
-    for (String tripId : trips.keySet()) {
-      Trip t = trips.get(tripId);
-      Route r = routes.get(t.routeId);
-      if (r.type.equals(type)) {
-        sortedTrips.add(t); 
-      }
-    }
+  i += 3;
+  
+  if (i > stops.size() - 3) {
+    noLoop();
+    endRecord();
   }
   
-  println("Sorted trips by route type.");
+}
+
+void drawCenteredStops(Stop center) {
+  stroke(0, 10);
+  noFill();
+  
+  Stop next = (Stop)stops.values().toArray()[i];
+  
+  PVector p1 = coordsToPixels(next.lng, next.lat);
+  PVector p2 = coordsToPixels(center.lng, center.lat);
+      
+  line(p1.x, p1.y, p2.x, p2.y);
+  
+  i++;
+  
+  if (i > stops.size() - 1) {
+    noLoop();
+    endRecord();
+  }
+}
+
+void drawAbstractStopLines() {
+  stroke(0, 10);
+  noFill();
+  Stop prev = (Stop)stops.values().toArray()[0];
+  for (int s = 1; s < stops.size(); s++) {
+     Stop current = (Stop)stops.values().toArray()[s];
+     
+     PVector p1 = coordsToPixels(prev.lng, prev.lat);
+     PVector p2 = coordsToPixels(current.lng, current.lat);
+      
+     line(p1.x, p1.y, p2.x, p2.y);
+     
+     prev = current;
+  }
+  
+  noLoop();
+  endRecord();
+}    
+
+
+void drawSortedStopLines() {
+  stroke(0);
+  strokeWeight(1);
+  
+  
+  // save frames to create GIFs
+  // save("export/frame_" + i + ".png");
+  
+  if (i > stops.size() - 1) {
+    noLoop();
+    endRecord();
+    println("DONE");
+  }
+}
+
+void drawShapes() {
+  stroke(0, 5);
+  strokeJoin(ROUND);
+  strokeCap(SQUARE);
+  strokeWeight(1);
+  
+  // Shape current = (Shape)shapes.values().toArray()[i];
+  // current.draw();
+  
+  for (Shape s : shapes.values()) {
+    s.drawAnim(i);
+  }
+  
+  // save("export/frame_" + i + ".png");
+  
+  i++;
+  
+  if (i > shapes.size() - 1) {
+    noLoop();
+    endRecord();
+    println("DONE");
+  }
+}
+
+void drawTrips(int perFrame) {
+  strokeJoin(MITER);
+  strokeCap(PROJECT);
+  
+  for (int n = 0; n < perFrame; n++) {
+    Trip t = sortedTrips.get(i-1);
+    Route r = routes.get(t.routeId);
+    Shape s = shapes.get(t.shapeId);
+    stroke(r.colour);
+    strokeWeight(1);
+    
+    if (r.type.equals("1")) {
+      strokeWeight(3); 
+    }
+     
+    if (s != null) {
+      s.draw();  
+    }
+    
+    i++;
+  }
+  
+  if (i > sortedTrips.size() - 1) {
+    noLoop();
+    endRecord();
+    println("DONE");  
+  }
 }
